@@ -1,0 +1,25 @@
+name: CC - Build UI
+description: Build the UI code of CC
+
+on:
+    workflow_dispatch: ~
+    push:
+        branches:
+        - 'care-connect'
+        - 'care-connect-develop'
+        paths:
+        - '**frontend/**'
+    pull_request:
+        branches:
+        - 'care-connect'
+        - 'care-connect-develop'
+        paths:
+        - '**frontend/**'
+        
+jobs:
+    build-all:
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Check out
+                id: checkout
+                uses: actions/checkout@v4

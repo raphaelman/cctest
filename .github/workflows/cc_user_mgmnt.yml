@@ -41,7 +41,7 @@ jobs:
   create-release:
     runs-on: ubuntu-latest
     needs: build-all
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/master')
+    if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/develop')
 
     steps:
       - name: Checkout code

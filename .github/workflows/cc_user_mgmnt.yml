@@ -27,6 +27,7 @@ on:
 
 jobs:
   build-all:
+    environment: aws
     runs-on: ubuntu-latest
     concurrency: 
       group: 'ci-cc-backend-${{ github.ref }}'
@@ -35,7 +36,7 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
       - name: Local CI
-        if: github.event_name != 'workflow_dispatch' || github.event.inputs.service == 'billing'
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.service == 'core'
         uses: ./careconnect2025/backend/core/github/actions/ci
       
   create-release:
@@ -50,8 +51,8 @@ jobs:
       - name: Create Release
         uses: actions/create-release@latest
         with:
-          tag_name: ${{ github.sha }}
-          release_name: CC-B r-${{ github.sha }}
-          body_path: ./backend/core/target/*.jar
+          tag_name: cc-v${{ github.run_number }}
+          release_name: CC-B R-v${{ github.run_number }}
+          body_path: ./backend/core/target/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

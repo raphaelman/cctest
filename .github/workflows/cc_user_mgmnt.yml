@@ -26,7 +26,6 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
       - name: Local CI
-        if: github.event_name != 'workflow_dispatch' || github.event.inputs.service == 'core'
         uses: ./careconnect2025/backend/core/github/actions/ci
       
   create-release:

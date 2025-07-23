@@ -91,11 +91,15 @@ jobs:
         with:
           name: cc-core-backend
 
+      - name: List
+        run: pwd && ls
       - name: Create Release
         uses: actions/create-release@v1.1.4
         with:
           tag_name: cc-v${{ github.run_number }}
           release_name: CC-B R-v${{ github.run_number }}
-          body_path: cc-core-b-for-lambda-v${{ github.run_number }}.zip
+          path: cc-core-b-for-lambda-v${{ github.run_number }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      

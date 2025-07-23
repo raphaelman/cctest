@@ -69,10 +69,12 @@ jobs:
           STRIPE_SECRET_KEY: ${{secrets.STRIPE_SECRET_KEY}}
           STRIPE_WEBHOOK_SIGNING_SECRET: ${{secrets.STRIPE_WEBHOOK_SIGNING_SECRET}}
       - name: Locate
-        run: pwd
+        run: |
+          pwd
+          ls
       - name: Rename zip
         id: rename
-        run: mv ./target/*.zip cc-core-b-for-lambda-v${{ github.run_number }}.zip
+        run: mv careconnect2025/backend/core/target/*.zip cc-core-b-for-lambda-v${{ github.run_number }}.zip
       - name: upload zip
         uses: actions/upload-artifact@v4
         with:

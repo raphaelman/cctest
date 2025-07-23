@@ -64,7 +64,7 @@ jobs:
       - name: Build with Maven
         working-directory: ./careconnect2025/backend/core
         shell: bash
-        run: mvn clean package --batch-mode -DskipTests
+        run: mvn clean package --batch-mode
         env:
           APP_FRONTEND_BASE_URL: ${{secrets.APP_FRONTEND_BASE_URL}}
           BASE_URL: ${{secrets.BASE_URL}}

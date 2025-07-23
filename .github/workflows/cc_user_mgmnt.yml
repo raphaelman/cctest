@@ -70,7 +70,7 @@ jobs:
           STRIPE_WEBHOOK_SIGNING_SECRET: ${{secrets.STRIPE_WEBHOOK_SIGNING_SECRET}}
       - name: Rename zip
         id: rename
-        run: mvn ./backend/core/target/*.zip cc-core-b-for-lambda-v${{ github.run_number }}.zip
+        run: mv ./backend/core/target/*.zip cc-core-b-for-lambda-v${{ github.run_number }}.zip
       - name: upload zip
         uses: actions/upload-artifact@v4
         with:

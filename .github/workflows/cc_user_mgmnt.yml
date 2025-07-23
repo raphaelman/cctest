@@ -68,10 +68,7 @@ jobs:
           SPRING_JPA_SHOW_SQL: ${{secrets.SPRING_JPA_SHOW_SQL}}
           STRIPE_SECRET_KEY: ${{secrets.STRIPE_SECRET_KEY}}
           STRIPE_WEBHOOK_SIGNING_SECRET: ${{secrets.STRIPE_WEBHOOK_SIGNING_SECRET}}
-      - name: Locate
-        run: |
-          pwd
-          ls
+      
       - name: Rename zip
         id: rename
         run: mv careconnect2025/backend/core/target/*.zip cc-core-b-for-lambda-v${{ github.run_number }}.zip
@@ -95,7 +92,7 @@ jobs:
           name: cc-core-backend
 
       - name: Create Release
-        uses: actions/create-release@latest
+        uses: actions/create-release@v1.1.4
         with:
           tag_name: cc-v${{ github.run_number }}
           release_name: CC-B R-v${{ github.run_number }}

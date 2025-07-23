@@ -23,7 +23,7 @@ jobs:
     environment: aws
     runs-on: ubuntu-latest
     concurrency: 
-      group: 'ci-cc-backend-${{ github.ref }}'
+      group: ${{ github.workflow }}-${{ github.ref }}
     
     services:
           mysql:
@@ -83,7 +83,7 @@ jobs:
           GOOGLE_SCOPE: ${{secrets.GOOGLE_SCOPE}}
           GOOGLE_TOKEN_URI: ${{secrets.GOOGLE_TOKEN_URI}}
           GOOGLE_USERINFO_URI: ${{secrets.GOOGLE_USERINFO_URI}}
-          JDBC_URI: jdbc:mysql://127.0.0.1:3306/
+          JDBC_URI: jdbc:mysql://127.0.0.1:3306/testdb
           JWT_EXPIRATION: ${{secrets.JWT_EXPIRATION}}
           LOGGING_LEVEL: ${{secrets.LOGGING_LEVEL}}
           MAIL_HOST: ${{secrets.MAIL_HOST}}

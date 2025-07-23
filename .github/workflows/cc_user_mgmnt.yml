@@ -1,17 +1,7 @@
 name: CI - CC Spring Boot Backend
 
 on:
-  workflow_dispatch:
-    inputs:
-      service:
-        description: 'Choose the service to build'
-        default: ''
-        type: choice
-        options:
-            - billing
-            - core
-            - communication
-            - wearable
+  workflow_dispatch: ~
   push:
     branches:
       - 'care-connect'

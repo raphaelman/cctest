@@ -68,6 +68,15 @@ jobs:
           SPRING_JPA_SHOW_SQL: ${{secrets.SPRING_JPA_SHOW_SQL}}
           STRIPE_SECRET_KEY: ${{secrets.STRIPE_SECRET_KEY}}
           STRIPE_WEBHOOK_SIGNING_SECRET: ${{secrets.STRIPE_WEBHOOK_SIGNING_SECRET}}
+      - name: Rename zip
+        id: rename
+        run: mvn ./backend/core/target/*.zip cc-core-b-for-lambda-v${{ github.run_number }}.zip
+      - name: upload zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: cc-core-backend
+          path: cc-core-b-for-lambda-v${{ github.run_number }}.zip
+          retention-days: 15
 
       
   create-release:
@@ -76,14 +85,16 @@ jobs:
     if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/develop')
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Get the Zip
+        uses: actions/download-artifact@v4
+        with:
+          name: cc-core-backend
 
       - name: Create Release
         uses: actions/create-release@latest
         with:
           tag_name: cc-v${{ github.run_number }}
           release_name: CC-B R-v${{ github.run_number }}
-          body_path: ./backend/core/target/*.zip
+          body_path: cc-core-b-for-lambda-v${{ github.run_number }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

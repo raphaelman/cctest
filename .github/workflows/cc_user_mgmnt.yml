@@ -68,9 +68,11 @@ jobs:
           SPRING_JPA_SHOW_SQL: ${{secrets.SPRING_JPA_SHOW_SQL}}
           STRIPE_SECRET_KEY: ${{secrets.STRIPE_SECRET_KEY}}
           STRIPE_WEBHOOK_SIGNING_SECRET: ${{secrets.STRIPE_WEBHOOK_SIGNING_SECRET}}
+      - name: Locate
+        run: pwd
       - name: Rename zip
         id: rename
-        run: mv ./backend/core/target/*.zip cc-core-b-for-lambda-v${{ github.run_number }}.zip
+        run: mv ./target/*.zip cc-core-b-for-lambda-v${{ github.run_number }}.zip
       - name: upload zip
         uses: actions/upload-artifact@v4
         with:

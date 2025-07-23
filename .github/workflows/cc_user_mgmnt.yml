@@ -94,12 +94,22 @@ jobs:
       - name: List
         run: pwd && ls
       - name: Create Release
+        id: release
         uses: actions/create-release@v1.1.4
         with:
           tag_name: cc-v${{ github.run_number }}
           release_name: CC-B R-v${{ github.run_number }}
-          path: cc-core-b-for-lambda-v${{ github.run_number }}.zip
+          draft: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.release.outputs.upload_url }}
+          release_name: CC-B R-v${{ github.run_number }}
+          asset_path: ./cc-core-b-for-lambda-v${{ github.run_number }}.zip
+          asset_name: cc-core-b-for-lambda-v${{ github.run_number }}.zip
+          asset_content_type: application/zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       

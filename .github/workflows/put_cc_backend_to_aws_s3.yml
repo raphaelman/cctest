@@ -36,7 +36,10 @@ jobs:
         tag: ${{ github.event.release.tag_name }}
         file: cc-core-b-for-lambda-v${{ github.run_number }}.zip
 
+    - name: List
+      run: pwd && ls
+      
     - name: Upload to S3
-      run: aws s3 cp target/my-app.zip s3://your-bucket-name/builds/my-app-${{ github.run_number }}.zip
+      run: aws s3 cp target/my-app.zip s3://cc-iac-us-east-1-641592448579/cc-backend-builds/cc-core-b-for-lambda-v${{ github.run_number }}.zip
       
 

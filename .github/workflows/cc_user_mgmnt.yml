@@ -143,4 +143,16 @@ jobs:
           asset_content_type: application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+
+      - name: Upload to S3
+        run: |
+          aws s3 cp target/my-app.zip s3://cc-iac-us-east-1-${{secrets.AWS_ACCOUNT_ID}}/cc-backend-builds/cc-core-b-for-lambda-v${{ github.run_number }}.zip

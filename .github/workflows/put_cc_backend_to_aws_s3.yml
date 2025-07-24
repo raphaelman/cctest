@@ -1,5 +1,5 @@
 
-name: Push to AWS S3 ECS
+name: CC - Push to AWS S3
 
 on:
   release:

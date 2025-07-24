@@ -3,7 +3,7 @@ name: CC - Push to AWS S3
 
 on:
   release:
-    types: [ published ]
+    types: [published]
 
 env:
   AWS_REGION: us-east-1

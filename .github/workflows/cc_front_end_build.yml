@@ -68,4 +68,4 @@ jobs:
       working-directory: ./careconnect2025/frontend
       run: |
         ls build -ail
-        aws s3 cp build/$ZIP_NAME s3://cc-iac-us-east-1-${{secrets.AWS_ACCOUNT_ID}}/cc-backend-builds/$ZIP_NAME
+        aws s3 cp build/$ZIP_NAME s3://cc-iac-us-east-1-${{secrets.AWS_ACCOUNT_ID}}/cc-frontend-builds/$ZIP_NAME

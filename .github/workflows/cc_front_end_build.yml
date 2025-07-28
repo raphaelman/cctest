@@ -37,6 +37,12 @@ jobs:
     - name: Build Flutter Web
       working-directory: ./careconnect2025/frontend
       run: flutter build web --base-href "/"
+      env: 
+          CC_BASE_URL_WEB: https://2hzh4p0ug6.execute-api.us-east-1.amazonaws.com
+          DEEPSEEK_API_KEY: ""
+          OPENAI_API_KEY: ""
+          FITBIT_CLIENT_SECRET: ""
+          FITBIT_CLIENT_ID: ""
 
     
     - name: Set environment variables

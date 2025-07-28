@@ -102,14 +102,17 @@ jobs:
           STRIPE_SECRET_KEY: ${{secrets.STRIPE_SECRET_KEY}}
           STRIPE_WEBHOOK_SIGNING_SECRET: ${{secrets.STRIPE_WEBHOOK_SIGNING_SECRET}}
       
+      - name: Set build zip name to env
+        run: |
+          echo "CC_ZIP_NAME=cc-core-b-for-lambda-v${{ github.run_number }}-${GITHUB_SHA::7}-$(date +%Y%m%d%HH%M).zip" >> $GITHUB_ENV
       - name: Rename zip
         id: rename
-        run: mv careconnect2025/backend/core/target/*.zip cc-core-b-for-lambda-v${{ github.run_number }}.zip
+        run: mv careconnect2025/backend/core/target/*.zip $CC_ZIP_NAME
       - name: upload zip
         uses: actions/upload-artifact@v4
         with:
           name: cc-core-backend
-          path: cc-core-b-for-lambda-v${{ github.run_number }}.zip
+          path: $CC_ZIP_NAME
           retention-days: 15
 
       
@@ -139,8 +142,8 @@ jobs:
         with:
           upload_url: ${{ steps.release.outputs.upload_url }}
           release_name: CC-B R-v${{ github.run_number }}
-          asset_path: ./cc-core-b-for-lambda-v${{ github.run_number }}.zip
-          asset_name: cc-core-b-for-lambda-v${{ github.run_number }}.zip
+          asset_path: ./$CC_ZIP_NAME
+          asset_name: $CC_ZIP_NAME
           asset_content_type: application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -155,4 +158,4 @@ jobs:
 
       - name: Upload to S3
         run: |
-          aws s3 cp cc-core-b-for-lambda-v${{ github.run_number }}.zip s3://cc-iac-us-east-1-${{secrets.AWS_ACCOUNT_ID}}/cc-backend-builds/cc-core-b-for-lambda-v${{ github.run_number }}.zip
+          aws s3 cp $CC_ZIP_NAME s3://cc-iac-us-east-1-${{secrets.AWS_ACCOUNT_ID}}/cc-backend-builds/$CC_ZIP_NAME

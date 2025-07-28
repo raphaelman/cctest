@@ -44,12 +44,10 @@ jobs:
           OPENAI_API_KEY: ""
           FITBIT_CLIENT_SECRET: ""
           FITBIT_CLIENT_ID: ""
-
     
     - name: Set environment variables
       run: |
-        echo "ZIP_NAME=cc-web-${GITHUB_SHA::7}-$(date +%Y%m%d).zip" >> $GITHUB_ENV
-
+        echo "ZIP_NAME=cc-web-${GITHUB_SHA::7}-$(date +%Y%m%d%HH%M).zip" >> $GITHUB_ENV
 
     - name: Zip Web Build
       working-directory: ./careconnect2025/frontend

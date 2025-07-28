@@ -10,6 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class FallbackController {
     @RequestMapping("/**")
     public ResponseEntity<?> fallback(HttpServletRequest request) {
-        return new ResponseEntity<>("No handler found for path: " + request.getRequestURI(), HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>("No endpoint found for path: " + request.getRequestURI(), HttpStatus.NOT_FOUND);
     }
 }

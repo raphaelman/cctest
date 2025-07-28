@@ -41,8 +41,9 @@ public class GamificationController {
         String userEmail = authentication.getName();
         // Additional validation can be added here if needed
 
-        XPProgress progress = gamificationService.getOrInitXpProgress(userId);
-        return ResponseEntity.ok(progress);
+        return gamificationService.getXpProgress(userId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.status(404).body(null));
     }
 
     // 3. Get earned achievements for a user

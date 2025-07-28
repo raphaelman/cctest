@@ -1,16 +1,20 @@
 package com.careconnect.dto;
 
+import com.careconnect.model.Gender;
+
 public class CaregiverRegistration {
 
     private String firstName;
     private String lastName;
     private String dob;
+    private Gender gender;
     private String email;
     private String phone;
     private ProfessionalInfoDto professional;
     private AddressDto address;
     private LoginRequest credentials;
-    private String caregiverType; 
+    private String caregiverType;
+    private String planId; 
 
     public String getFirstName() {
         return firstName;
@@ -82,5 +86,21 @@ public class CaregiverRegistration {
 
     public void setCaregiverType(String caregiverType) { 
         this.caregiverType = caregiverType;
+    }
+    
+    public String getPlanId() {
+        return planId;
+    }
+    
+    public void setPlanId(String planId) {
+        this.planId = planId;
+    }
+
+    public Gender getGender() {
+        return gender;
+    }
+
+    public void setGender(Gender gender) {
+        this.gender = gender;
     }
 }

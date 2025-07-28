@@ -37,10 +37,17 @@ build/
 .env.local
 .env.*.local
 *.env
+# Keep .env.example for developers
+!.env.example
+
+### Firebase Security ###
+firebase-service-account.json
+**/firebase-service-account*.json
 
 ### Local Development Scripts ###
-load-env.sh
-load-env.bat
+# Environment scripts are now part of the project
+# load-env.sh
+# load-env.bat
 set-env.sh
 set-env.bat
 test-env.sh
@@ -58,8 +65,10 @@ app.log
 *.temp
 
 ### Documentation Files ###
-SECURITY_CONFIG.md
-SECURITY_AUDIT.md
-CONSOLE_CLEANUP.md
-STARTUP_OPTIMIZATION.md
+# Ignore all .md files except README files
+*.md
+!README.md
+!**/README.md
+
+# Keep .env.example
 .env.example

@@ -5,12 +5,33 @@ import 'package:provider/provider.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:app_links/app_links.dart';
 import 'dart:async';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'firebase_options.dart';
 import 'providers/user_provider.dart';
+import 'providers/theme_provider.dart';
 import 'config/router/app_router.dart';
 import 'services/auth_migration_helper.dart';
+import 'services/messaging_service.dart';
+import 'services/video_call_service.dart';
+import 'config/theme/app_theme.dart';
+import 'config/utils/responsive_utils.dart';
+import 'config/utils/web_utils.dart';
+
+// Background message handler for Firebase
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  print("Handling a background message: ${message.messageId}");
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Only do critical initialization synchronously
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   // Performance optimization: Set preferred orientations
   await SystemChrome.setPreferredOrientations([
@@ -23,32 +44,65 @@ Future<void> main() async {
   // Configure URL strategy for web to remove hash from URLs
   usePathUrlStrategy();
 
+  // Load environment quickly
   await dotenv.load();
-  await _bootstrap(); // load env, init DI, etc.
 
-  // Migrate from old auth system to new JWT-only system
-  final migrationResult = await AuthMigrationHelper.migrateAuthData();
-  if (!migrationResult.isSuccess && migrationResult.errorMessage != null) {
-    // Log migration errors for debugging, but don't block app startup
-    // The app can still function without migration
-    debugPrint('Auth migration warning: ${migrationResult.errorMessage}');
-  }
-
-  // Create UserProvider and initialize it
+  // Create providers (don't initialize them yet)
   final userProvider = UserProvider();
-  await userProvider.initializeUser();
+  final themeProvider = ThemeProvider();
 
+  // Start the app immediately, initialize services in background
   runApp(
-    ChangeNotifierProvider.value(
-      value: userProvider,
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: userProvider),
+        ChangeNotifierProvider.value(value: themeProvider),
+      ],
       child: const CareConnectApp(),
     ),
   );
+
+  // Initialize heavy services in background after app starts
+  _initializeServicesInBackground(userProvider);
+}
+
+// Background initialization to not block app startup
+Future<void> _initializeServicesInBackground(UserProvider userProvider) async {
+  try {
+    // Run these in parallel for faster initialization
+    await Future.wait([
+      _bootstrap(),
+      MessagingService.initialize(),
+      VideoCallService.initializeService(),
+      userProvider.initializeUser(),
+      _handleAuthMigration(),
+    ], eagerError: false); // Don't stop if one fails
+
+    print('✅ Background services initialized');
+  } catch (e) {
+    print('⚠️ Some background services failed to initialize: $e');
+  }
+}
+
+Future<void> _handleAuthMigration() async {
+  try {
+    final migrationResult = await AuthMigrationHelper.migrateAuthData();
+    if (!migrationResult.isSuccess && migrationResult.errorMessage != null) {
+      debugPrint('Auth migration warning: ${migrationResult.errorMessage}');
+    }
+  } catch (e) {
+    debugPrint('Auth migration error: $e');
+  }
 }
 
 Future<void> _bootstrap() async {
   // Performance optimization: Warm up system caches
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
+  // Initialize web-specific optimizations
+  if (kIsWeb) {
+    WebUtils.initializeWebOptimizations();
+  }
 }
 
 class CareConnectApp extends StatefulWidget {
@@ -116,28 +170,84 @@ class _CareConnectAppState extends State<CareConnectApp> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return MaterialApp.router(
       title: 'CareConnect',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        // Performance optimization: Reduce font loading
-        fontFamily: 'Roboto',
-        // Optimize material design
-        useMaterial3: true,
-        // Reduce overdraw
+      themeMode: themeProvider.themeMode,
+      theme: AppTheme.lightTheme.copyWith(
+        // Additional theme customizations
         visualDensity: VisualDensity.adaptivePlatformDensity,
+        textTheme: AppTheme.lightTheme.textTheme.apply(fontFamily: 'Roboto'),
+        // Platform-specific theme adjustments
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.android: OpenUpwardsPageTransitionsBuilder(),
+            TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.windows: ZoomPageTransitionsBuilder(),
+            TargetPlatform.linux: ZoomPageTransitionsBuilder(),
+            TargetPlatform.fuchsia: ZoomPageTransitionsBuilder(),
+          },
+        ),
+        // Adjust card elevation for iOS vs Android
+        cardTheme: CardThemeData(
+          elevation: kIsWeb ? 2 : (ResponsiveUtils.isIOS ? 1 : 2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ResponsiveUtils.isIOS ? 12 : 8),
+          ),
+        ),
+      ),
+      darkTheme: AppTheme.darkTheme.copyWith(
+        // Additional dark theme customizations
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+        textTheme: AppTheme.darkTheme.textTheme.apply(fontFamily: 'Roboto'),
+        // Platform-specific theme adjustments
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.android: OpenUpwardsPageTransitionsBuilder(),
+            TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+            TargetPlatform.windows: ZoomPageTransitionsBuilder(),
+            TargetPlatform.linux: ZoomPageTransitionsBuilder(),
+            TargetPlatform.fuchsia: ZoomPageTransitionsBuilder(),
+          },
+        ),
+        // Adjust card elevation for iOS vs Android
+        cardTheme: CardThemeData(
+          elevation: kIsWeb ? 3 : (ResponsiveUtils.isIOS ? 2 : 3),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ResponsiveUtils.isIOS ? 12 : 8),
+          ),
+        ),
       ),
       routerConfig: appRouter,
-      // Performance optimization: Reduce memory usage
+      // Performance optimization and responsive behavior
       builder: (context, child) {
+        // Handle text scaling for accessibility
+        final mediaQuery = MediaQuery.of(context);
+        final textScaleFactor = mediaQuery.textScaleFactor.clamp(0.8, 1.2);
+
+        // Apply platform-specific adjustments
+        Widget updatedChild = child!;
+
+        // Apply safe area with platform awareness
+        updatedChild = SafeArea(
+          bottom: !ResponsiveUtils.isWeb, // Web doesn't need bottom padding
+          child: updatedChild,
+        );
+
+        // Apply the adjusted MediaQuery
         return MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.linear(
-              MediaQuery.of(context).textScaleFactor.clamp(0.8, 1.2),
-            ),
+          data: mediaQuery.copyWith(
+            textScaler: TextScaler.linear(textScaleFactor),
+            // Ensure proper viewport settings across devices
+            devicePixelRatio: ResponsiveUtils.isWeb
+                ? mediaQuery.devicePixelRatio
+                : mediaQuery.devicePixelRatio.clamp(1.0, 3.0),
           ),
-          child: child!,
+          child: updatedChild,
         );
       },
     );

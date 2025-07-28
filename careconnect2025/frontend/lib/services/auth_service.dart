@@ -1,21 +1,18 @@
-import 'dart:async';
 import 'dart:convert';
-
-import 'package:app_links/app_links.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:app_links/app_links.dart';
+import 'dart:async';
 import '../config/env_constant.dart';
-import '../providers/user_provider.dart';
 import 'api_service.dart';
-import 'auth_token_manager.dart';
 import 'oauth_service.dart';
+import '../providers/user_provider.dart';
+import 'auth_token_manager.dart';
 
 class ApiConstants {
   static final String _host = getBackendBaseUrl();
-  static final String auth = '${_host}/v1/api/auth';
-  static final String caregivers = '${_host}/v1/api/caregivers';
-  static final String users = '${_host}/v1/api/users';
+  static final String auth = '$_host/v1/api/auth';
+  static final String caregivers = '$_host/v1/api/caregivers';
+  static final String users = '$_host/v1/api/users';
   static final String webBaseUrl = getWebBaseUrl();
   static String get baseUrl => _host;
 }
@@ -90,14 +87,6 @@ class AuthService {
               // Create user session
               final userSession = UserSession.fromJson(userData);
 
-              // Store userId and username for comment support
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setString('userId', userSession.id.toString());
-              await prefs.setString(
-                'username',
-                userSession.name ?? userSession.email,
-              );
-
               // Force update JWT token and session using the new token manager
               // This ensures fresh tokens are always used after OAuth login
               await AuthTokenManager.saveAuthData(
@@ -155,25 +144,10 @@ class AuthService {
     required String role,
   }) async {
     final response = await ApiService.login(email, password, role: role);
+    final data = jsonDecode(response.body);
 
-    if (response.statusCode != 200) {
-      throw Exception(
-        'Login failed: ${response.statusCode} ${response.reasonPhrase}',
-      );
-    }
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-
-      if (data['id'] == null || data['token'] == null) {
-        throw Exception('Login failed: Missing user or token in response');
-      }
-
       final userSession = UserSession.fromJson(data);
-
-      // ✅ Store userId and username in SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('userId', userSession.id.toString());
-      await prefs.setString('username', userSession.name ?? "");
 
       // Force update JWT token and session using the new token manager
       // This ensures fresh tokens are always used after login
@@ -189,8 +163,7 @@ class AuthService {
 
       return userSession;
     } else {
-      final error = jsonDecode(response.body);
-      throw Exception(error['error'] ?? 'Login failed');
+      throw Exception(data['error'] ?? 'Login failed');
     }
   }
 
@@ -230,13 +203,14 @@ class AuthService {
     }
   }
 
-  static Future<String> registerCaregiver({
+  static Future<Map<String, dynamic>> registerCaregiver({
     required String firstName,
     required String lastName,
     required String email,
     required String password,
     String? dob,
     String? phone,
+    String? gender,
     String? licenseNumber,
     String? issuingState,
     int? yearsExperience,
@@ -255,7 +229,7 @@ class AuthService {
       'dob': dob ?? "01/01/1990",
       'email': email,
       'phone': phone ?? "000-000-0000",
-      'name': '$firstName $lastName',
+      'gender': gender ?? "",
     };
 
     print('🔍 Debug: Basic data added successfully');
@@ -319,7 +293,30 @@ class AuthService {
       if (response.statusCode == 201 || response.statusCode == 200) {
         final data = jsonDecode(response.body);
         print("✅ Caregiver Registration: $data");
-        return 'Caregiver registration successful!';
+
+        // Extract user ID and stripeCustomerId from the nested user object
+        String userId = '0';
+        String stripeCustomerId = '';
+        if (data.containsKey('user') && data['user'] is Map<String, dynamic>) {
+          final userObj = data['user'] as Map<String, dynamic>;
+          userId = userObj['id']?.toString() ?? '0';
+          stripeCustomerId = userObj['stripeCustomerId'] ?? '';
+          print("✅ Extracted User ID: $userId from nested user object");
+          print(
+            "✅ Extracted Stripe Customer ID: $stripeCustomerId from nested user object",
+          );
+        } else {
+          print("⚠️ Warning: User object not found in registration response");
+        }
+
+        // Return both the success message and the user info
+        return {
+          'message': 'Caregiver registration successful!',
+          'userId': userId, // Use the user ID from the nested user object
+          'caregiverId':
+              data['id']?.toString() ?? '0', // Also store the caregiver ID
+          'stripeCustomerId': stripeCustomerId, // Include Stripe customer ID
+        };
       } else {
         final data = jsonDecode(response.body);
         print(

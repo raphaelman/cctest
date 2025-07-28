@@ -22,16 +22,14 @@ class UserSession {
   });
 
   factory UserSession.fromJson(Map<String, dynamic> json) {
-    final user = json['user'] ?? json; // Support both wrapped and flat
-
     return UserSession(
-      id: user['id'],
-      email: user['email'],
-      role: user['role'],
-      name: user['name'],
+      id: json['id'],
+      email: json['email'],
+      role: json['role'],
       token: json['token'] ?? '',
       patientId: json['patientId'],
       caregiverId: json['caregiverId'],
+      name: json['name'],
     );
   }
 
@@ -150,5 +148,22 @@ class UserProvider extends ChangeNotifier {
 
   bool get isLoggedIn => _user != null;
   bool get isCaregiver => _user?.role.toUpperCase() == 'CAREGIVER';
+
+  // Update user name
+  void updateUserName(String newName) {
+    if (_user != null) {
+      _user = UserSession(
+        id: _user!.id,
+        email: _user!.email,
+        role: _user!.role,
+        token: _user!.token,
+        patientId: _user!.patientId,
+        caregiverId: _user!.caregiverId,
+        name: newName,
+      );
+      notifyListeners();
+    }
+  }
+
   bool get isPatient => _user?.role.toUpperCase() == 'PATIENT';
 }

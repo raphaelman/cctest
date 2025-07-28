@@ -1,8 +1,14 @@
 package com.careconnect.dto;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
 public class User {
-	private Long id;
-	private String name;
+	private Long id; 
 	private String email;
 	private String password;
 	private boolean emailVerified;
@@ -51,13 +57,6 @@ public class User {
 
 	public void setRole(com.careconnect.security.Role role) {
 		this.role = role;
-	}
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 public boolean isEmailVerified() {

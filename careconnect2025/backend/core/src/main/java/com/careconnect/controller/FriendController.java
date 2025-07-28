@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 
 @RestController
-@RequestMapping("/v1/api/friends")
+@RequestMapping("/api/friends")
 public class FriendController {
 
     @Autowired

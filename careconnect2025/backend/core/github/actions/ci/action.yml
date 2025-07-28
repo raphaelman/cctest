@@ -18,74 +18,8 @@ runs:
       working-directory: ./careconnect2025/backend/core
       shell: bash
       run: mvn test --batch-mode
-      env:
-        APP_FRONTEND_BASE_URL: ${{secrets.APP_FRONTEND_BASE_URL}}
-        BASE_URL: ${{secrets.BASE_URL}}
-        CORS_ALLOWED_LIST: ${{secrets.CORS_ALLOWED_LIST}}
-        DB_PASSWORD: ${{secrets.DB_PASSWORD}}
-        DB_USER: ${{secrets.DB_USER}}
-        EMAIL_PROVIDER: ${{secrets.EMAIL_PROVIDER}}
-        FITBIT_CLIENT_ID: ${{secrets.FITBIT_CLIENT_ID}}
-        FITBIT_CLIENT_SECRET: ${{secrets.FITBIT_CLIENT_SECRET}}
-        FROM_EMAIL: ${{secrets.FROM_EMAIL}}
-        GOOGLE_AUTH_URI: ${{secrets.GOOGLE_AUTH_URI}}
-        GOOGLE_CLIENT_ID: ${{secrets.GOOGLE_CLIENT_ID}}
-        GOOGLE_CLIENT_NAME: ${{secrets.GOOGLE_CLIENT_NAME}}
-        GOOGLE_CLIENT_SECRET: ${{secrets.GOOGLE_CLIENT_SECRET}}
-        GOOGLE_REDIRECT_URI: ${{secrets.GOOGLE_REDIRECT_URI}}
-        GOOGLE_SCOPE: ${{secrets.GOOGLE_SCOPE}}
-        GOOGLE_TOKEN_URI: ${{secrets.GOOGLE_TOKEN_URI}}
-        GOOGLE_USERINFO_URI: ${{secrets.GOOGLE_USERINFO_URI}}
-        JDBC_URI: ${{secrets.JDBC_URI}}
-        JWT_EXPIRATION: ${{secrets.JWT_EXPIRATION}}
-        LOGGING_LEVEL: ${{secrets.LOGGING_LEVEL}}
-        MAIL_HOST: ${{secrets.MAIL_HOST}}
-        MAIL_PASSWORD: ${{secrets.MAIL_PASSWORD}}
-        MAIL_PORT: ${{secrets.MAIL_PORT}}
-        MAIL_SMTP_AUTH: ${{secrets.MAIL_SMTP_AUTH}}
-        MAIL_SMTP_STARTTLS: ${{secrets.MAIL_SMTP_STARTTLS}}
-        MAIL_USERNAME: ${{secrets.MAIL_USERNAME}}
-        OPENAI_API_KEY: ${{secrets.OPENAI_API_KEY}}
-        SECURITY_JWT_SECRET: ${{secrets.SECURITY_JWT_SECRET}}
-        SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}
-        SPRING_JPA_SHOW_SQL: ${{secrets.SPRING_JPA_SHOW_SQL}}
-        STRIPE_SECRET_KEY: ${{secrets.STRIPE_SECRET_KEY}}
-        STRIPE_WEBHOOK_SIGNING_SECRET: ${{secrets.STRIPE_WEBHOOK_SIGNING_SECRET}}
 
     - name: Build with Maven
       working-directory: ./careconnect2025/backend/core
       shell: bash
-      run: mvn clean package --batch-mode
-      env:
-        APP_FRONTEND_BASE_URL: ${{secrets.APP_FRONTEND_BASE_URL}}
-        BASE_URL: ${{secrets.BASE_URL}}
-        CORS_ALLOWED_LIST: ${{secrets.CORS_ALLOWED_LIST}}
-        DB_PASSWORD: ${{secrets.DB_PASSWORD}}
-        DB_USER: ${{secrets.DB_USER}}
-        EMAIL_PROVIDER: ${{secrets.EMAIL_PROVIDER}}
-        FITBIT_CLIENT_ID: ${{secrets.FITBIT_CLIENT_ID}}
-        FITBIT_CLIENT_SECRET: ${{secrets.FITBIT_CLIENT_SECRET}}
-        FROM_EMAIL: ${{secrets.FROM_EMAIL}}
-        GOOGLE_AUTH_URI: ${{secrets.GOOGLE_AUTH_URI}}
-        GOOGLE_CLIENT_ID: ${{secrets.GOOGLE_CLIENT_ID}}
-        GOOGLE_CLIENT_NAME: ${{secrets.GOOGLE_CLIENT_NAME}}
-        GOOGLE_CLIENT_SECRET: ${{secrets.GOOGLE_CLIENT_SECRET}}
-        GOOGLE_REDIRECT_URI: ${{secrets.GOOGLE_REDIRECT_URI}}
-        GOOGLE_SCOPE: ${{secrets.GOOGLE_SCOPE}}
-        GOOGLE_TOKEN_URI: ${{secrets.GOOGLE_TOKEN_URI}}
-        GOOGLE_USERINFO_URI: ${{secrets.GOOGLE_USERINFO_URI}}
-        JDBC_URI: ${{secrets.JDBC_URI}}
-        JWT_EXPIRATION: ${{secrets.JWT_EXPIRATION}}
-        LOGGING_LEVEL: ${{secrets.LOGGING_LEVEL}}
-        MAIL_HOST: ${{secrets.MAIL_HOST}}
-        MAIL_PASSWORD: ${{secrets.MAIL_PASSWORD}}
-        MAIL_PORT: ${{secrets.MAIL_PORT}}
-        MAIL_SMTP_AUTH: ${{secrets.MAIL_SMTP_AUTH}}
-        MAIL_SMTP_STARTTLS: ${{secrets.MAIL_SMTP_STARTTLS}}
-        MAIL_USERNAME: ${{secrets.MAIL_USERNAME}}
-        OPENAI_API_KEY: ${{secrets.OPENAI_API_KEY}}
-        SECURITY_JWT_SECRET: ${{secrets.SECURITY_JWT_SECRET}}
-        SENDGRID_API_KEY: ${{secrets.SENDGRID_API_KEY}}
-        SPRING_JPA_SHOW_SQL: ${{secrets.SPRING_JPA_SHOW_SQL}}
-        STRIPE_SECRET_KEY: ${{secrets.STRIPE_SECRET_KEY}}
-        STRIPE_WEBHOOK_SIGNING_SECRET: ${{secrets.STRIPE_WEBHOOK_SIGNING_SECRET}}
+      run: mvn clean install --batch-mode

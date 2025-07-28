@@ -1,17 +1,16 @@
 name: CI - CC Spring Boot Backend
+description: This workflow builds the Spring Boot backend for Care Connect and uploads it to S3 depending on the branch name.
 
 on:
   workflow_dispatch: ~
   push:
     branches:
-      - 'care-connect'
-      - 'care-connect-develop'
+      - 'care-connect**'
     paths:
       - '**backend/**'
   pull_request:
     branches:
-      - 'care-connect'
-      - 'care-connect-develop'
+      - 'care-connect**'
     paths:
       - '**backend/**'
 
@@ -26,19 +25,18 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}
     
     services:
-          mysql:
-            image: mysql:8.0
-            env:
-              MYSQL_ROOT_PASSWORD: root
-              MYSQL_DATABASE: testdb
-            ports:
-              - 3306:3306
-            options: >-
-              --health-cmd="mysqladmin ping"
-              --health-interval=10s
-              --health-timeout=5s
-              --health-retries=3
-
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: testdb
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
     steps:
       - name: Check out
         id: checkout
@@ -60,7 +58,12 @@ jobs:
               echo "Waiting for MySQL..."
               sleep 2
             done
-
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: AKIAZKYPD2ZB74YL5WVG
+          aws-secret-access-key: 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
+          aws-region: us-east-1
       - name: Build with Maven
         working-directory: ./careconnect2025/backend/core
         shell: bash
@@ -74,7 +77,7 @@ jobs:
           EMAIL_PROVIDER: ${{secrets.EMAIL_PROVIDER}}
           FITBIT_CLIENT_ID: ${{secrets.FITBIT_CLIENT_ID}}
           FITBIT_CLIENT_SECRET: ${{secrets.FITBIT_CLIENT_SECRET}}
-          FROM_EMAIL: ${{secrets.FROM_EMAIL}}
+          FROM_EMAIL: ${{secrets.FROM_EMAIL }}
           GOOGLE_AUTH_URI: ${{secrets.GOOGLE_AUTH_URI}}
           GOOGLE_CLIENT_ID: ${{secrets.GOOGLE_CLIENT_ID}}
           GOOGLE_CLIENT_NAME: ${{secrets.GOOGLE_CLIENT_NAME}}
@@ -114,7 +117,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: aws
     needs: build-all
-    if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/develop')
+    if: startsWith(github.ref, 'refs/heads/care-connect-')
 
     steps:
       - name: Get the Zip

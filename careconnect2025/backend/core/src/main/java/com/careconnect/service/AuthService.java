@@ -96,7 +96,15 @@ public class AuthService {
 
     public ResponseEntity<?> register(RegisterRequest request) {
         // 1. Lookup existing user by email & role
-        Optional<User> existingUserOpt = userRepository.findByEmailAndRole(request.getEmail(), request.getRole());
+        Role roleEnum;
+        try {
+            roleEnum = Role.valueOf(request.getRole().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(Collections.singletonMap("error", "Invalid role specified"));
+        }
+        
+        Optional<User> existingUserOpt = userRepository.findByEmailAndRole(request.getEmail(), roleEnum);
 
         // 2. If user exists
         if (existingUserOpt.isPresent()) {
@@ -153,19 +161,25 @@ public class AuthService {
 
     // ✅ Validate user for login
     public Optional<User> validateUser(String email, String password, String role) {
-        Optional<User> userOpt = userRepository.findByEmailAndRole(email, role);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            // Check password
-            if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-                return Optional.empty();
+        try {
+            Role roleEnum = Role.valueOf(role.toUpperCase());
+            Optional<User> userOpt = userRepository.findByEmailAndRole(email, roleEnum);
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                // Check password
+                if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+                    return Optional.empty();
+                }
+                // Check email verification
+                if (!Boolean.TRUE.equals(user.getIsVerified())) {
+                    // Instead of returning empty, you could throw to signal "not verified"
+                    throw new RuntimeException("Please verify your email before logging in.");
+                }
+                return Optional.of(user);
             }
-            // Check email verification
-            if (!Boolean.TRUE.equals(user.getIsVerified())) {
-                // Instead of returning empty, you could throw to signal "not verified"
-                throw new RuntimeException("Please verify your email before logging in.");
-            }
-            return Optional.of(user);
+        } catch (IllegalArgumentException e) {
+            // Invalid role provided
+            return Optional.empty();
         }
         return Optional.empty();
     }
@@ -241,8 +255,23 @@ public class AuthService {
 public LoginResponse loginV2(LoginRequest req,
                              HttpServletResponse res) {
 
-    User user = users.findByEmail(req.getEmail())
-                     .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
+    // Fix: Use findByEmailAndRole to prevent authentication issues when multiple users 
+    // have the same email with different roles
+    User user;
+    if (req.getRole() != null && !req.getRole().trim().isEmpty()) {
+        try {
+            Role roleEnum = Role.valueOf(req.getRole().toUpperCase());
+            user = users.findByEmailAndRole(req.getEmail(), roleEnum)
+                       .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
+        } catch (IllegalArgumentException e) {
+            throw new AuthenticationException("Invalid role specified");
+        }
+    } else {
+        // Fallback to findByEmail for backward compatibility, but this may cause issues
+        // if multiple users have the same email with different roles
+        user = users.findByEmail(req.getEmail())
+                   .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
+    }
 
     if (!passwordEncoder.matches(req.getPassword(), user.getPasswordHash()))
         throw new AuthenticationException("Invalid credentials");
@@ -274,11 +303,6 @@ public LoginResponse loginV2(LoginRequest req,
         case ADMIN -> {
             name = user.getName();
         }
-    }
-    // Auto-fix and persist user name if missing
-    if ((user.getName() == null || user.getName().isBlank()) && name != null) {
-        user.setName(name);
-        userRepository.save(user);
     }
 
     /* ---------------- Build short-lived access token -------------------- */
@@ -345,12 +369,6 @@ public LoginResponse loginV2(LoginRequest req,
                 name = user.getName();
             }
         }
-        // Fix and persist name if missing
-        if ((user.getName() == null || user.getName().isBlank()) && name != null) {
-            user.setName(name);
-            userRepository.save(user);
-        }
-
 
         /* ---------------- Build short-lived access token -------------------- */
         String token = jwt.createToken(user.getEmail(), user.getRole());  // 15-min exp

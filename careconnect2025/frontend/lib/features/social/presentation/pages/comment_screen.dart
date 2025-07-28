@@ -1,10 +1,10 @@
-import 'dart:convert';
-
 import 'package:care_connect_app/config/env_constant.dart';
-import 'package:care_connect_app/services/api_service.dart';
+import 'package:care_connect_app/services/session_manager.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
 
 class CommentScreen extends StatefulWidget {
   final int postId;
@@ -30,11 +30,13 @@ class _CommentScreenState extends State<CommentScreen> {
   Future<void> fetchComments() async {
     setState(() => isLoading = true);
 
+    final session = SessionManager();
+    await session.restoreSession();
+
     final url = '${getBackendBaseUrl()}/api/comments/post/${widget.postId}';
 
     try {
-      final headers = await ApiService.getAuthHeaders();
-      final response = await http.get(Uri.parse(url), headers: headers);
+      final response = await session.get(url);
       print('Comments GET status: ${response.statusCode}');
       print('Comments GET body: ${response.body}');
 
@@ -56,9 +58,9 @@ class _CommentScreenState extends State<CommentScreen> {
   }
 
   Future<void> submitComment() async {
-    final storage = FlutterSecureStorage();
-    final userId = await storage.read(key: 'userId');
-    final username = await storage.read(key: 'username');
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('userId');
+    final username = prefs.getString('username'); // If you have it stored
 
     if (userId == null || _commentController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -69,9 +71,10 @@ class _CommentScreenState extends State<CommentScreen> {
 
     setState(() => isSubmitting = true);
 
+    final session = SessionManager();
+    await session.restoreSession();
+
     final url = '${getBackendBaseUrl()}/api/comments/post/${widget.postId}';
-    final headers = await ApiService.getAuthHeaders();
-    headers['Content-Type'] = 'application/json';
 
     final body = jsonEncode({
       'userId': int.parse(userId),
@@ -79,11 +82,7 @@ class _CommentScreenState extends State<CommentScreen> {
       'content': _commentController.text.trim(),
     });
 
-    final response = await http.post(
-      Uri.parse(url),
-      headers: headers,
-      body: body,
-    );
+    final response = await session.post(url, body: body);
 
     setState(() => isSubmitting = false);
 
@@ -121,10 +120,8 @@ class _CommentScreenState extends State<CommentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Comments'),
-        backgroundColor: Colors.blue.shade900,
-      ),
+      appBar: AppBarHelper.createAppBar(context, title: 'Comments'),
+      drawer: const CommonDrawer(currentRoute: '/comments'),
       body: Column(
         children: [
           Expanded(

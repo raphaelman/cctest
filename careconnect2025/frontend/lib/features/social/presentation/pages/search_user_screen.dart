@@ -1,11 +1,13 @@
-import 'dart:convert';
-
-import 'package:care_connect_app/services/api_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+// import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:care_connect_app/services/api_service.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
 
 class SearchUserScreen extends StatefulWidget {
-  const SearchUserScreen({super.key});
+  final int userId;
+  const SearchUserScreen({super.key, required this.userId});
 
   @override
   State<SearchUserScreen> createState() => _SearchUserScreenState();
@@ -13,79 +15,47 @@ class SearchUserScreen extends StatefulWidget {
 
 class _SearchUserScreenState extends State<SearchUserScreen> {
   final TextEditingController _controller = TextEditingController();
-  final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
-
   List<dynamic> results = [];
   bool isLoading = false;
-  int? _userId;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadUserId();
-  }
+  Future<void> searchUsers() async {
+    setState(() => isLoading = true);
+    final response = await ApiService.searchUsers(
+      _controller.text.trim(),
+      widget.userId,
+    );
 
-  Future<void> _loadUserId() async {
-    final idStr = await _secureStorage.read(key: 'userId');
-    if (idStr != null) {
-      setState(() {
-        _userId = int.tryParse(idStr);
-      });
+    if (response.statusCode == 200) {
+      setState(() => results = jsonDecode(response.body));
     } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('User ID not found')));
-    }
-  }
-
-  Future<void> searchUsers() async {
-    if (_userId == null) return;
-
-    setState(() => isLoading = true);
-    try {
-      final response = await ApiService.searchUsers(
-        _controller.text.trim(),
-        _userId!,
-      );
-
-      if (response.statusCode == 200) {
-        setState(() => results = jsonDecode(response.body));
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Search failed')));
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      ).showSnackBar(const SnackBar(content: Text('Search failed')));
     }
     setState(() => isLoading = false);
   }
 
   Future<void> sendRequest(int toUserId) async {
-    try {
-      final response = await ApiService.sendFriendRequest(_userId!, toUserId);
-      if (response.statusCode == 201) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Friend request sent')));
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Request failed')));
-      }
-    } catch (e) {
+    final response = await ApiService.sendFriendRequest(
+      widget.userId,
+      toUserId,
+    );
+    if (response.statusCode == 201) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      ).showSnackBar(const SnackBar(content: Text('Friend request sent')));
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Request failed')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Search Users')),
+      appBar: AppBarHelper.createAppBar(context, title: 'Search Users'),
+      drawer: const CommonDrawer(currentRoute: '/search-users'),
       body: Column(
         children: [
           Padding(
@@ -95,7 +65,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
               decoration: InputDecoration(
                 labelText: 'Search by name or email',
                 suffixIcon: IconButton(
-                  icon: Icon(Icons.search),
+                  icon: const Icon(Icons.search),
                   onPressed: searchUsers,
                 ),
               ),
@@ -103,7 +73,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
           ),
           Expanded(
             child: isLoading
-                ? Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator())
                 : ListView.builder(
                     itemCount: results.length,
                     itemBuilder: (context, index) {
@@ -113,7 +83,7 @@ class _SearchUserScreenState extends State<SearchUserScreen> {
                         subtitle: Text(user['email']),
                         trailing: ElevatedButton(
                           onPressed: () => sendRequest(user['id']),
-                          child: Text('Add'),
+                          child: const Text('Add'),
                         ),
                       );
                     },

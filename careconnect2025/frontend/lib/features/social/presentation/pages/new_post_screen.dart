@@ -1,42 +1,23 @@
-import 'dart:io';
-
-import 'package:care_connect_app/services/api_service.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
+import 'package:care_connect_app/services/api_service.dart';
+import 'package:care_connect_app/services/session_manager.dart';
+import 'package:care_connect_app/widgets/app_bar_helper.dart';
+import 'package:care_connect_app/widgets/common_drawer.dart';
 
 class NewPostScreen extends StatefulWidget {
-  const NewPostScreen({super.key});
+  final int userId;
+  const NewPostScreen({super.key, required this.userId});
 
   @override
   State<NewPostScreen> createState() => _NewPostScreenState();
 }
 
 class _NewPostScreenState extends State<NewPostScreen> {
-  final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
   final TextEditingController _contentController = TextEditingController();
   File? _selectedImage;
   bool isPosting = false;
-  int? _userId;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserId(); // ✅ NEW
-  }
-
-  Future<void> _loadUserId() async {
-    final userIdString = await _secureStorage.read(key: 'userId');
-    if (userIdString != null) {
-      setState(() {
-        _userId = int.tryParse(userIdString);
-      });
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('User ID not found')));
-    }
-  }
 
   Future<void> pickImage() async {
     final result = await FilePicker.platform.pickFiles(type: FileType.image);
@@ -55,17 +36,14 @@ class _NewPostScreenState extends State<NewPostScreen> {
       return;
     }
 
-    if (_userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cannot post: user not logged in')),
-      );
-      return;
-    }
+    // Call restoreSession() here to ensure the session cookie is restored
+    final session = SessionManager();
+    await session.restoreSession(); // This will restore the session cookie
 
     setState(() => isPosting = true);
     try {
       final response = await ApiService.createPost(
-        _userId!,
+        widget.userId,
         content,
         _selectedImage,
       );
@@ -94,10 +72,8 @@ class _NewPostScreenState extends State<NewPostScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create New Post'),
-        backgroundColor: Colors.blue.shade900,
-      ),
+      appBar: AppBarHelper.createAppBar(context, title: 'Create New Post'),
+      drawer: const CommonDrawer(currentRoute: '/new_post'),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
